@@ -10,6 +10,8 @@
 - Color scale logic for charts with lots of items has been fixed.
 - Update `@woocommerce/navigation` to v2.0.0
 - Bug fix for `<StockReportTable />` returning N/A instead of zero.
+- Update card header to use flexbox styles to support older browsers.
+- Move table download button into table header menu area.
 
 # 1.4.2
 - Add emoji-flags dependency
