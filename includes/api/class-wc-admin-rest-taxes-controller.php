@@ -38,10 +38,19 @@ class WC_Admin_REST_Taxes_Controller extends WC_REST_Taxes_Controller {
 	 * @return array
 	 */
 	public function get_collection_params() {
-		$params         = parent::get_collection_params();
-		$params['code'] = array(
+		$params            = parent::get_collection_params();
+		$params['code']    = array(
 			'description'       => __( 'Search by similar tax code.', 'wc-admin' ),
 			'type'              => 'string',
+			'validate_callback' => 'rest_validate_request_arg',
+		);
+		$params['include'] = array(
+			'description'       => __( 'Limit result set to items that have the specified rate ID(s) assigned.', 'wc-admin' ),
+			'type'              => 'array',
+			'items'             => array(
+				'type' => 'integer',
+			),
+			'default'           => array(),
 			'validate_callback' => 'rest_validate_request_arg',
 		);
 		return $params;
@@ -160,6 +169,11 @@ class WC_Admin_REST_Taxes_Controller extends WC_REST_Taxes_Controller {
 		if ( $request['code'] ) {
 			$prepared_args['code'] = $request['code'];
 		}
+
+		if ( $request['include'] ) {
+			$prepared_args['include'] = $request['include'];
+		}
+
 		return $prepared_args;
 	}
 
@@ -178,6 +192,12 @@ class WC_Admin_REST_Taxes_Controller extends WC_REST_Taxes_Controller {
 			$tax_code_search = $wpdb->esc_like( $tax_code_search );
 			$tax_code_search = ' \'%' . $tax_code_search . '%\'';
 			$query          .= ' AND CONCAT_WS( "-", NULLIF(tax_rate_country, ""), NULLIF(tax_rate_state, ""), NULLIF(tax_rate_name, ""), NULLIF(tax_rate_priority, "") ) LIKE ' . $tax_code_search;
+		}
+
+		$included_taxes = $prepared_args['include'];
+		if ( ! empty( $included_taxes ) ) {
+			$included_taxes = implode( ',', $prepared_args['include'] );
+			$query         .= " AND tax_rate_id IN ({$included_taxes})";
 		}
 
 		return $query;
